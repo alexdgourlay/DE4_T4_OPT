@@ -1,7 +1,7 @@
 clear(), clc; 
 addpath('./S2_Functions');
 
-%% Loading in Motor Data and Assigning to range space
+%% Loading in Motor Data
 data = readtable('OPT_SiemensCatalogue.xlsx');
 Y = table2array(data(:,'J'));
 x_Trated = table2array(data(:, 'T'));
@@ -9,18 +9,25 @@ x_Tb = table2array(data(:, 'T_b_T_rated'));
 x_Tl = table2array(data(:, 'T_lr_T_rated'));
 x_nrated = table2array(data(:, 'n'));
 
+% Motor data is assigned to global variable 'motorX' for use in other
+% scripts.
 global motorX;
 motorX = [x_Trated, x_Tb, x_Tl, x_nrated];
 
 %% Visualising Motor Inertia against torque and rated n
+% Creating [30x30] matrices for the mesh
+% Going between the lower and upper bounds of the data
 [xq,yq] = meshgrid(linspace(min(x_Trated), max(x_Trated), 30),...
                     linspace(min(x_nrated), max(x_nrated), 30));
-            
+ 
+% Gridding the data
 [gridX, gridY, gridZ] = griddata(x_Trated, x_nrated,Y, xq, yq, 'linear');
 
-mesh(gridX, gridY, gridZ);
-hold on
+% Plotting the data points
 plot3(x_Trated, x_nrated,Y, 'o');
+hold on
+% Plotting the mesh
+mesh(gridX, gridY, gridZ);
 xlabel('$t_{rated}$', 'Interpreter','latex', 'FontSize', 15); 
 ylabel('$n_{rated}$', 'Interpreter','latex', 'FontSize', 15);
 zlabel('$J$', 'Interpreter','latex', 'FontSize', 15);
@@ -29,6 +36,7 @@ zlabel('$J$', 'Interpreter','latex', 'FontSize', 15);
 rng(2);
 
 N = length(motorX);
+% Dividing dat into test:train sets, with 85:15 split
 slice_idx = round(0.85*N);
 idxs = randperm(N);
 

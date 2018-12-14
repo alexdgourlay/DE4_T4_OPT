@@ -26,12 +26,16 @@ wsweights = linspace(0.7, 1, n);
 xws = zeros(n,9); 
 fws = zeros(n,3); % 1st col V, 2nd col F, 3rd col weighted obj
 for i = 1:n
+    % Going through different weighting combinations
     w = [wsweights(i), 1-wsweights(i)];
     fun = @(x)multiobjective(x,w,p);
+    % Optimising using fmincon
     [xopt,fopt] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,@(x)sys_nlcon(x,p),options);
     xws(i,:) = xopt; 
     fws(i,3) = fopt;
+    % Calculating capacity 
     fws(i,1) = -s1_objective(xws(i,1:4));
+    % Calculating energy
     fws(i,2) = s2_objective([xws(i,5:9), mass_lift(xws(i,:)),xws(i,2)],p);
 end
 
@@ -39,13 +43,14 @@ end
 capacity = fws(:,1)';
 energy = fws(:,2)';
 scatter(capacity, energy);
+% Reverse capacity to reflect inverted direction of improvement
 set(gca,'Xdir','reverse');
 xlabel('Capacity'); ylabel('Energy Consumption');
 title('Pareto Set');
 
+% Adding weighting labels
 a = wsweights'; 
-dx = -20; dy = 0; % displacement so the text does not overlay the data points
-
+dx = -20; dy = 0;
 for i = 1:length(capacity)-1
     if abs(capacity(i)-capacity(i+1))> 0.3
     text(capacity(i)+dx, energy(i)-dy,...
